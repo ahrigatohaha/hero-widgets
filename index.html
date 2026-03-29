@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HE:RO D-Day Dashboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: transparent;
+    padding: 8px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    max-width: 720px;
+  }
+
+  .card {
+    border-radius: 12px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    min-height: 110px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(11, 31, 59, 0.18);
+  }
+
+  /* 1. 핵심 — 가장 진한 남색 */
+  .card--primary {
+    background: linear-gradient(135deg, #0B1F3B 0%, #122B4D 100%);
+    color: #F0F4F8;
+  }
+  .card--primary .card__status { color: rgba(240, 244, 248, 0.5); }
+  .card--primary .card__title { color: rgba(240, 244, 248, 0.88); }
+  .card--primary .card__dday { color: #F0F4F8; }
+  .card--primary .card__date { color: rgba(240, 244, 248, 0.45); }
+  .card--primary .card__accent { background: rgba(255, 255, 255, 0.06); }
+
+  /* 2. 진행중 — 중간 남색 */
+  .card--active {
+    background: linear-gradient(135deg, #1B3A5C 0%, #234B72 100%);
+    color: #E1EBF5;
+  }
+  .card--active .card__status { color: rgba(225, 235, 245, 0.5); }
+  .card--active .card__title { color: rgba(225, 235, 245, 0.88); }
+  .card--active .card__dday { color: #E1EBF5; }
+  .card--active .card__date { color: rgba(225, 235, 245, 0.45); }
+  .card--active .card__accent { background: rgba(255, 255, 255, 0.06); }
+
+  /* 3. 심사대기 — 밝은 남색 */
+  .card--waiting {
+    background: linear-gradient(135deg, #2E5A88 0%, #38679A 100%);
+    color: #DCE8F4;
+  }
+  .card--waiting .card__status { color: rgba(220, 232, 244, 0.5); }
+  .card--waiting .card__title { color: rgba(220, 232, 244, 0.88); }
+  .card--waiting .card__dday { color: #DCE8F4; }
+  .card--waiting .card__date { color: rgba(220, 232, 244, 0.45); }
+  .card--waiting .card__accent { background: rgba(255, 255, 255, 0.06); }
+
+  /* 4. 미정 — 반전 화이트 */
+  .card--pending {
+    background: linear-gradient(135deg, #E8EFF7 0%, #F0F5FB 100%);
+    color: #1A3350;
+    border: 1px solid rgba(26, 51, 80, 0.08);
+  }
+  .card--pending .card__status { color: rgba(26, 51, 80, 0.4); }
+  .card--pending .card__title { color: rgba(26, 51, 80, 0.75); }
+  .card--pending .card__dday { color: #1A3350; }
+  .card--pending .card__date { color: rgba(26, 51, 80, 0.35); }
+  .card--pending .card__accent { background: rgba(26, 51, 80, 0.03); }
+
+  .card__accent {
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .card__status {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .card__title {
+    font-size: 12.5px;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-bottom: auto;
+    word-break: keep-all;
+  }
+
+  .card__bottom {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+
+  .card__dday {
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1;
+  }
+
+  .card__date {
+    font-size: 11px;
+    font-weight: 400;
+  }
+
+  /* 지난 일정 표시 */
+  .card__dday--past {
+    opacity: 0.6;
+  }
+
+  /* 반응형: 모바일에서 1열 */
+  @media (max-width: 420px) {
+    .grid { grid-template-columns: 1fr; }
+    .card { min-height: 90px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grid" id="ddayGrid"></div>
+
+<script>
+const DDAY_DATA = [
+  {
+    title: "모두의 창업",
+    date: "2026-05-15",
+    status: "⭐ 핵심 일정",
+    theme: "primary"
+  },
+  {
+    title: "금정구 로컬크리에이터 지원사업",
+    date: "2026-03-20",
+    status: "● 진행중",
+    theme: "active"
+  },
+  {
+    title: "민간 THE HUSTLERS Challenger",
+    date: "2026-04-26",
+    status: "◐ 심사대기",
+    theme: "waiting"
+  },
+  {
+    title: "부외대 창업경진대회",
+    date: "2026-05-29",
+    status: "○ 미정",
+    theme: "pending"
+  }
+];
+
+function calcDday(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
+  if (diff > 0) return `D-${diff}`;
+  if (diff === 0) return "D-Day";
+  return `D+${Math.abs(diff)}`;
+}
+
+function formatDate(dateStr) {
+  const d = new Date(dateStr);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}.${m}.${day}`;
+}
+
+function isPast(dateStr) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  return target < today;
+}
+
+function render() {
+  const grid = document.getElementById('ddayGrid');
+  grid.innerHTML = DDAY_DATA.map(item => {
+    const dday = calcDday(item.date);
+    const pastClass = isPast(item.date) ? ' card__dday--past' : '';
+    return `
+      <div class="card card--${item.theme}">
+        <div class="card__accent"></div>
+        <div class="card__status">${item.status}</div>
+        <div class="card__title">${item.title}</div>
+        <div class="card__bottom">
+          <div class="card__dday${pastClass}">${dday}</div>
+          <div class="card__date">${formatDate(item.date)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+render();
+// 자정마다 자동 업데이트
+setInterval(render, 60 * 60 * 1000);
+</script>
+
+</body>
+</html>
