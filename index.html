@@ -39,7 +39,6 @@
     box-shadow: 0 8px 24px rgba(11, 31, 59, 0.18);
   }
 
-  /* 1. 핵심 — 가장 진한 남색 */
   .card--primary {
     background: linear-gradient(135deg, #0B1F3B 0%, #122B4D 100%);
     color: #F0F4F8;
@@ -50,7 +49,6 @@
   .card--primary .card__date { color: rgba(240, 244, 248, 0.45); }
   .card--primary .card__accent { background: rgba(255, 255, 255, 0.06); }
 
-  /* 2. 진행중 — 중간 남색 */
   .card--active {
     background: linear-gradient(135deg, #1B3A5C 0%, #234B72 100%);
     color: #E1EBF5;
@@ -61,7 +59,6 @@
   .card--active .card__date { color: rgba(225, 235, 245, 0.45); }
   .card--active .card__accent { background: rgba(255, 255, 255, 0.06); }
 
-  /* 3. 심사대기 — 밝은 남색 */
   .card--waiting {
     background: linear-gradient(135deg, #2E5A88 0%, #38679A 100%);
     color: #DCE8F4;
@@ -72,7 +69,6 @@
   .card--waiting .card__date { color: rgba(220, 232, 244, 0.45); }
   .card--waiting .card__accent { background: rgba(255, 255, 255, 0.06); }
 
-  /* 4. 미정 — 반전 화이트 */
   .card--pending {
     background: linear-gradient(135deg, #E8EFF7 0%, #F0F5FB 100%);
     color: #1A3350;
@@ -115,6 +111,7 @@
     align-items: baseline;
     justify-content: space-between;
     margin-top: 12px;
+    gap: 12px;
   }
 
   .card__dday {
@@ -122,19 +119,20 @@
     font-weight: 900;
     letter-spacing: -1px;
     line-height: 1;
+    white-space: nowrap;
   }
 
   .card__date {
     font-size: 11px;
     font-weight: 400;
+    text-align: right;
+    line-height: 1.35;
   }
 
-  /* 지난 일정 표시 */
   .card__dday--past {
     opacity: 0.6;
   }
 
-  /* 반응형: 모바일에서 1열 */
   @media (max-width: 420px) {
     .grid { grid-template-columns: 1fr; }
     .card { min-height: 90px; }
@@ -160,6 +158,18 @@ const DDAY_DATA = [
     theme: "active"
   },
   {
+    title: "2026 청년 로컬크리에이터\n레벨업 사업 참여기업 모집",
+    date: "2026-04-08T16:00:00",
+    status: "● 진행중",
+    theme: "active"
+  },
+  {
+    title: "2026 로컬크리에이터 지원사업\n(소상공인 도약사업)",
+    date: "2026-04-24T16:00:00",
+    status: "● 진행중",
+    theme: "active"
+  },
+  {
     title: "민간 THE HUSTLERS Challenger",
     date: "2026-04-26",
     status: "◐ 심사대기",
@@ -173,31 +183,88 @@ const DDAY_DATA = [
   }
 ];
 
+const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+
+function hasTimeInfo(dateStr) {
+  return /T\d{2}:\d{2}/.test(dateStr);
+}
+
+function parseDate(dateStr) {
+  const [datePart, timePart] = dateStr.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+
+  if (!timePart) {
+    return new Date(year, month - 1, day, 0, 0, 0, 0);
+  }
+
+  const [hours = 0, minutes = 0, seconds = 0] = timePart.split(':').map(Number);
+  return new Date(year, month - 1, day, hours, minutes, seconds, 0);
+}
+
+function calcDayDiff(dateStr) {
+  const now = new Date();
+  const target = parseDate(dateStr);
+
+  const todayStart = new Date(now);
+  todayStart.setHours(0, 0, 0, 0);
+
+  const targetStart = new Date(target);
+  targetStart.setHours(0, 0, 0, 0);
+
+  return Math.round((targetStart - todayStart) / (1000 * 60 * 60 * 24));
+}
+
 function calcDday(dateStr) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  target.setHours(0, 0, 0, 0);
-  const diff = Math.round((target - today) / (1000 * 60 * 60 * 24));
-  if (diff > 0) return `D-${diff}`;
-  if (diff === 0) return "D-Day";
-  return `D+${Math.abs(diff)}`;
+  const now = new Date();
+  const target = parseDate(dateStr);
+  const dayDiff = calcDayDiff(dateStr);
+
+  if (hasTimeInfo(dateStr)) {
+    if (target > now) {
+      if (dayDiff === 0) return "D-Day";
+      return `D-${dayDiff}`;
+    }
+    if (dayDiff === 0) return "마감";
+    return `D+${Math.abs(dayDiff)}`;
+  }
+
+  if (dayDiff > 0) return `D-${dayDiff}`;
+  if (dayDiff === 0) return "D-Day";
+  return `D+${Math.abs(dayDiff)}`;
 }
 
 function formatDate(dateStr) {
-  const d = new Date(dateStr);
+  const d = parseDate(dateStr);
   const y = d.getFullYear();
   const m = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
+  const weekday = WEEKDAYS[d.getDay()];
+
+  if (hasTimeInfo(dateStr)) {
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    return `${y}.${m}.${day}(${weekday}) ${hours}:${minutes}`;
+  }
+
   return `${y}.${m}.${day}`;
 }
 
 function isPast(dateStr) {
-  const today = new Date();
+  const now = new Date();
+  const target = parseDate(dateStr);
+
+  if (hasTimeInfo(dateStr)) {
+    return target < now;
+  }
+
+  const today = new Date(now);
   today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
   target.setHours(0, 0, 0, 0);
   return target < today;
+}
+
+function renderTitle(title) {
+  return title.replace(/\n/g, '<br>');
 }
 
 function render() {
@@ -209,7 +276,7 @@ function render() {
       <div class="card card--${item.theme}">
         <div class="card__accent"></div>
         <div class="card__status">${item.status}</div>
-        <div class="card__title">${item.title}</div>
+        <div class="card__title">${renderTitle(item.title)}</div>
         <div class="card__bottom">
           <div class="card__dday${pastClass}">${dday}</div>
           <div class="card__date">${formatDate(item.date)}</div>
@@ -220,8 +287,7 @@ function render() {
 }
 
 render();
-// 자정마다 자동 업데이트
-setInterval(render, 60 * 60 * 1000);
+setInterval(render, 60 * 1000);
 </script>
 
 </body>
