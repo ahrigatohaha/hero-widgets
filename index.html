@@ -16,11 +16,28 @@
     -webkit-font-smoothing: antialiased;
   }
 
+  .section { margin-bottom: 20px; }
+  .section:last-child { margin-bottom: 0; }
+
+  .section__label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: rgba(11, 31, 59, 0.35);
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
   .grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     max-width: 720px;
+  }
+
+  .grid--single {
+    grid-template-columns: 1fr;
   }
 
   .card {
@@ -39,42 +56,48 @@
     box-shadow: 0 8px 24px rgba(11, 31, 59, 0.18);
   }
 
+  /* 핵심 — large hero card */
   .card--primary {
-    background: linear-gradient(135deg, #0B1F3B 0%, #122B4D 100%);
+    background: linear-gradient(135deg, #0B1F3B 0%, #162D50 100%);
     color: #F0F4F8;
+    min-height: 130px;
+    padding: 22px 24px;
   }
-  .card--primary .card__status { color: rgba(240, 244, 248, 0.5); }
-  .card--primary .card__title { color: rgba(240, 244, 248, 0.88); }
-  .card--primary .card__dday { color: #F0F4F8; }
+  .card--primary .card__tag { background: rgba(255,255,255,0.12); color: rgba(240,244,248,0.9); }
+  .card--primary .card__title { color: rgba(240, 244, 248, 0.92); font-size: 15px; font-weight: 700; }
+  .card--primary .card__dday { color: #F0F4F8; font-size: 36px; }
   .card--primary .card__date { color: rgba(240, 244, 248, 0.45); }
-  .card--primary .card__accent { background: rgba(255, 255, 255, 0.06); }
+  .card--primary .card__accent { background: rgba(255, 255, 255, 0.05); }
 
+  /* 진행중 */
   .card--active {
     background: linear-gradient(135deg, #1B3A5C 0%, #234B72 100%);
     color: #E1EBF5;
   }
-  .card--active .card__status { color: rgba(225, 235, 245, 0.5); }
+  .card--active .card__tag { background: rgba(255,255,255,0.1); color: rgba(225,235,245,0.8); }
   .card--active .card__title { color: rgba(225, 235, 245, 0.88); }
   .card--active .card__dday { color: #E1EBF5; }
   .card--active .card__date { color: rgba(225, 235, 245, 0.45); }
   .card--active .card__accent { background: rgba(255, 255, 255, 0.06); }
 
+  /* 심사대기 */
   .card--waiting {
     background: linear-gradient(135deg, #2E5A88 0%, #38679A 100%);
     color: #DCE8F4;
   }
-  .card--waiting .card__status { color: rgba(220, 232, 244, 0.5); }
+  .card--waiting .card__tag { background: rgba(255,255,255,0.1); color: rgba(220,232,244,0.8); }
   .card--waiting .card__title { color: rgba(220, 232, 244, 0.88); }
   .card--waiting .card__dday { color: #DCE8F4; }
   .card--waiting .card__date { color: rgba(220, 232, 244, 0.45); }
   .card--waiting .card__accent { background: rgba(255, 255, 255, 0.06); }
 
+  /* 미정 */
   .card--pending {
     background: linear-gradient(135deg, #E8EFF7 0%, #F0F5FB 100%);
     color: #1A3350;
     border: 1px solid rgba(26, 51, 80, 0.08);
   }
-  .card--pending .card__status { color: rgba(26, 51, 80, 0.4); }
+  .card--pending .card__tag { background: rgba(26,51,80,0.06); color: rgba(26,51,80,0.5); }
   .card--pending .card__title { color: rgba(26, 51, 80, 0.75); }
   .card--pending .card__dday { color: #1A3350; }
   .card--pending .card__date { color: rgba(26, 51, 80, 0.35); }
@@ -90,31 +113,15 @@
     pointer-events: none;
   }
 
-  .card__status {
+  .card__tag {
+    display: inline-block;
     font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .card__status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0;
-    text-transform: none;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 2px 8px;
+    border-radius: 4px;
     margin-bottom: 8px;
-  }
-
-  .card__status-badge--primary {
-    background: rgba(240, 244, 248, 0.2);
-    color: #F0F4F8;
-    border: 1px solid rgba(240, 244, 248, 0.35);
+    align-self: flex-start;
   }
 
   .card__title {
@@ -141,15 +148,17 @@
     white-space: nowrap;
   }
 
+  .card__dday--ongoing {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
   .card__date {
     font-size: 11px;
     font-weight: 400;
     text-align: right;
     line-height: 1.35;
-  }
-
-  .card__dday--past {
-    opacity: 0.6;
   }
 
   @media (max-width: 420px) {
@@ -160,49 +169,61 @@
 </head>
 <body>
 
-<div class="grid" id="ddayGrid"></div>
+<div id="app"></div>
 
 <script>
 const DDAY_DATA = [
   {
     title: "모두의 창업",
     date: "2026-05-15",
-    status: "핵심 일정",
-    theme: "primary"
+    category: "primary",
+    theme: "primary",
+    ongoing: false
   },
   {
     title: "금정구 로컬크리에이터 지원사업",
     date: "2026-03-20",
-    status: "진행중",
-    theme: "active"
+    category: "active",
+    theme: "active",
+    ongoing: true
   },
   {
     title: "2026 청년 로컬크리에이터\n레벨업 사업 참여기업 모집",
     date: "2026-04-08T16:00:00",
-    status: "진행중",
-    theme: "active"
+    category: "active",
+    theme: "active",
+    ongoing: false
   },
   {
     title: "2026 로컬크리에이터 지원사업\n(소상공인 도약사업)",
     date: "2026-04-24T16:00:00",
-    status: "진행중",
-    theme: "active"
+    category: "active",
+    theme: "active",
+    ongoing: false
   },
   {
     title: "민간 THE HUSTLERS Challenger",
     date: "2026-04-26",
-    status: "심사대기",
-    theme: "waiting"
+    category: "waiting",
+    theme: "waiting",
+    ongoing: false
   },
   {
     title: "부외대 창업경진대회",
     date: "2026-05-29",
-    status: "미정",
-    theme: "pending"
+    category: "pending",
+    theme: "pending",
+    ongoing: false
   }
 ];
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const CATEGORY_ORDER = ["primary", "active", "waiting", "pending"];
+const CATEGORY_LABELS = {
+  primary: "⭐ 핵심 일정",
+  active: "● 진행중",
+  waiting: "◐ 심사대기",
+  pending: "○ 미정"
+};
 
 function hasTimeInfo(dateStr) {
   return /T\d{2}:\d{2}/.test(dateStr);
@@ -211,11 +232,7 @@ function hasTimeInfo(dateStr) {
 function parseDate(dateStr) {
   const [datePart, timePart] = dateStr.split('T');
   const [year, month, day] = datePart.split('-').map(Number);
-
-  if (!timePart) {
-    return new Date(year, month - 1, day, 0, 0, 0, 0);
-  }
-
+  if (!timePart) return new Date(year, month - 1, day, 0, 0, 0, 0);
   const [hours = 0, minutes = 0, seconds = 0] = timePart.split(':').map(Number);
   return new Date(year, month - 1, day, hours, minutes, seconds, 0);
 }
@@ -223,82 +240,49 @@ function parseDate(dateStr) {
 function calcDayDiff(dateStr) {
   const now = new Date();
   const target = parseDate(dateStr);
-
-  const todayStart = new Date(now);
-  todayStart.setHours(0, 0, 0, 0);
-
-  const targetStart = new Date(target);
-  targetStart.setHours(0, 0, 0, 0);
-
-  return Math.round((targetStart - todayStart) / (1000 * 60 * 60 * 24));
+  const todayStart = new Date(now); todayStart.setHours(0,0,0,0);
+  const targetStart = new Date(target); targetStart.setHours(0,0,0,0);
+  return Math.round((targetStart - todayStart) / (1000*60*60*24));
 }
 
-function calcDday(dateStr) {
+function calcDday(item) {
+  const dateStr = item.date;
+  const dayDiff = calcDayDiff(dateStr);
   const now = new Date();
   const target = parseDate(dateStr);
-  const dayDiff = calcDayDiff(dateStr);
+
+  // ongoing 항목이 과거면 "참여 X일째"
+  if (item.ongoing && dayDiff < 0) {
+    return { text: `참여 ${Math.abs(dayDiff)}일째`, isOngoing: true };
+  }
 
   if (hasTimeInfo(dateStr)) {
     if (target > now) {
-      if (dayDiff === 0) return "D-Day";
-      return `D-${dayDiff}`;
+      if (dayDiff === 0) return { text: "D-Day", isOngoing: false };
+      return { text: `D-${dayDiff}`, isOngoing: false };
     }
-    if (dayDiff === 0) return "마감";
-    return `D+${Math.abs(dayDiff)}`;
+    if (dayDiff === 0) return { text: "마감", isOngoing: false };
+    return { text: `D+${Math.abs(dayDiff)}`, isOngoing: false };
   }
 
-  if (dayDiff > 0) return `D-${dayDiff}`;
-  if (dayDiff === 0) return "D-Day";
-  return `D+${Math.abs(dayDiff)}`;
-}
-
-function calcDisplayLabel(item) {
-  const dayDiff = calcDayDiff(item.date);
-  const defaultLabel = calcDday(item.date);
-
-  if (item.theme === 'active' && dayDiff < 0) {
-    return `참여 ${Math.abs(dayDiff)}일째`;
-  }
-
-  return defaultLabel;
-}
-
-function renderStatus(item) {
-  if (item.theme === 'primary') {
-    return `<div class="card__status card__status-badge card__status-badge--primary">⭐ ${item.status}</div>`;
-  }
-
-  return `<div class="card__status">${item.status}</div>`;
+  if (dayDiff > 0) return { text: `D-${dayDiff}`, isOngoing: false };
+  if (dayDiff === 0) return { text: "D-Day", isOngoing: false };
+  return { text: `D+${Math.abs(dayDiff)}`, isOngoing: false };
 }
 
 function formatDate(dateStr) {
   const d = parseDate(dateStr);
+  const WEEKDAYS = ["일","월","화","수","목","금","토"];
   const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  const weekday = WEEKDAYS[d.getDay()];
-
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  const wd = WEEKDAYS[d.getDay()];
   if (hasTimeInfo(dateStr)) {
-    const hours = String(d.getHours()).padStart(2, '0');
-    const minutes = String(d.getMinutes()).padStart(2, '0');
-    return `${y}.${m}.${day}(${weekday}) ${hours}:${minutes}`;
+    const h = String(d.getHours()).padStart(2,'0');
+    const min = String(d.getMinutes()).padStart(2,'0');
+    return `${y}.${m}.${day}(${wd}) ${h}:${min}`;
   }
-
-  return `${y}.${m}.${day}`;
-}
-
-function isPast(dateStr) {
-  const now = new Date();
-  const target = parseDate(dateStr);
-
-  if (hasTimeInfo(dateStr)) {
-    return target < now;
-  }
-
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  target.setHours(0, 0, 0, 0);
-  return target < today;
+  return `${y}.${m}.${day}(${wd})`;
 }
 
 function renderTitle(title) {
@@ -306,27 +290,44 @@ function renderTitle(title) {
 }
 
 function render() {
-  const grid = document.getElementById('ddayGrid');
-  grid.innerHTML = DDAY_DATA.map(item => {
-    const dday = calcDisplayLabel(item);
-    const pastClass = isPast(item.date) ? ' card__dday--past' : '';
-    return `
-      <div class="card card--${item.theme}">
-        <div class="card__accent"></div>
-        ${renderStatus(item)}
-        <div class="card__title">${renderTitle(item.title)}</div>
-        <div class="card__bottom">
-          <div class="card__dday${pastClass}">${dday}</div>
-          <div class="card__date">${formatDate(item.date)}</div>
-        </div>
-      </div>
-    `;
-  }).join('');
+  const app = document.getElementById('app');
+  const grouped = {};
+  CATEGORY_ORDER.forEach(c => grouped[c] = []);
+  DDAY_DATA.forEach(item => grouped[item.category].push(item));
+
+  let html = '';
+  CATEGORY_ORDER.forEach(cat => {
+    const items = grouped[cat];
+    if (!items.length) return;
+
+    const isPrimary = cat === 'primary';
+
+    html += `<div class="section">`;
+    html += `<div class="section__label">${CATEGORY_LABELS[cat]}</div>`;
+    html += `<div class="grid${isPrimary ? ' grid--single' : ''}">`;
+
+    items.forEach(item => {
+      const dday = calcDday(item);
+      const ddayClass = dday.isOngoing ? ' card__dday--ongoing' : '';
+      html += `
+        <div class="card card--${item.theme}">
+          <div class="card__accent"></div>
+          <div class="card__title">${renderTitle(item.title)}</div>
+          <div class="card__bottom">
+            <div class="card__dday${ddayClass}">${dday.text}</div>
+            <div class="card__date">${formatDate(item.date)}</div>
+          </div>
+        </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  app.innerHTML = html;
 }
 
 render();
 setInterval(render, 60 * 1000);
 </script>
-
 </body>
 </html>
