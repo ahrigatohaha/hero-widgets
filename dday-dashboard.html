@@ -98,6 +98,25 @@
     margin-bottom: 6px;
   }
 
+  .card__status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0;
+    text-transform: none;
+    margin-bottom: 8px;
+  }
+
+  .card__status-badge--primary {
+    background: rgba(240, 244, 248, 0.2);
+    color: #F0F4F8;
+    border: 1px solid rgba(240, 244, 248, 0.35);
+  }
+
   .card__title {
     font-size: 12.5px;
     font-weight: 500;
@@ -148,37 +167,37 @@ const DDAY_DATA = [
   {
     title: "모두의 창업",
     date: "2026-05-15",
-    status: "⭐ 핵심 일정",
+    status: "핵심 일정",
     theme: "primary"
   },
   {
     title: "금정구 로컬크리에이터 지원사업",
     date: "2026-03-20",
-    status: "● 진행중",
+    status: "진행중",
     theme: "active"
   },
   {
     title: "2026 청년 로컬크리에이터\n레벨업 사업 참여기업 모집",
     date: "2026-04-08T16:00:00",
-    status: "● 진행중",
+    status: "진행중",
     theme: "active"
   },
   {
     title: "2026 로컬크리에이터 지원사업\n(소상공인 도약사업)",
     date: "2026-04-24T16:00:00",
-    status: "● 진행중",
+    status: "진행중",
     theme: "active"
   },
   {
     title: "민간 THE HUSTLERS Challenger",
     date: "2026-04-26",
-    status: "◐ 심사대기",
+    status: "심사대기",
     theme: "waiting"
   },
   {
     title: "부외대 창업경진대회",
     date: "2026-05-29",
-    status: "○ 미정",
+    status: "미정",
     theme: "pending"
   }
 ];
@@ -233,6 +252,25 @@ function calcDday(dateStr) {
   return `D+${Math.abs(dayDiff)}`;
 }
 
+function calcDisplayLabel(item) {
+  const dayDiff = calcDayDiff(item.date);
+  const defaultLabel = calcDday(item.date);
+
+  if (item.theme === 'active' && dayDiff < 0) {
+    return `참여 ${Math.abs(dayDiff)}일째`;
+  }
+
+  return defaultLabel;
+}
+
+function renderStatus(item) {
+  if (item.theme === 'primary') {
+    return `<div class="card__status card__status-badge card__status-badge--primary">⭐ ${item.status}</div>`;
+  }
+
+  return `<div class="card__status">${item.status}</div>`;
+}
+
 function formatDate(dateStr) {
   const d = parseDate(dateStr);
   const y = d.getFullYear();
@@ -270,12 +308,12 @@ function renderTitle(title) {
 function render() {
   const grid = document.getElementById('ddayGrid');
   grid.innerHTML = DDAY_DATA.map(item => {
-    const dday = calcDday(item.date);
+    const dday = calcDisplayLabel(item);
     const pastClass = isPast(item.date) ? ' card__dday--past' : '';
     return `
       <div class="card card--${item.theme}">
         <div class="card__accent"></div>
-        <div class="card__status">${item.status}</div>
+        ${renderStatus(item)}
         <div class="card__title">${renderTitle(item.title)}</div>
         <div class="card__bottom">
           <div class="card__dday${pastClass}">${dday}</div>
